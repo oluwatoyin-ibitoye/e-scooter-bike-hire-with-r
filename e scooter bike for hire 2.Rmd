@@ -1,0 +1,342 @@
+---
+title: 'E scooter bike hire for local transport in bristol with R'
+author: "oluwatoyin ibitoye"
+
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+# do not change these options
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(error = TRUE,comment=NA) # do not edit this line.
+```
+
+
+
+# Background to the research
+
+The West of England Combined Authority currently has a trial scheme in which residents can hire an e-scooter for local transport needs.
+
+Bristol City Council are interested in potential summer demand for e-scooters based on weather, visibility, and distance from the city center. Data has been obtained from a city in Japan which has an e-scooter rental scheme. 
+
+The data that has been collected from the city in Japan, is to be anlaysed to potentially assist Bristol City Council planning. 
+
+
+
+
+# Data instructrions
+
+The data to be used is in the file on Blackboard titled JapanEScooterData.csv
+
+Look at summer days, and only use daylight hours which is defined by having solar radiation (MJ/m2) values greater than 0 when the scheme was functioning.
+
+After you have completed the instructions above for selecting the subgroup of the data to analyse, use your studentID as a seed to then select a random sample of 500 observations to use for your analyses.
+
+You should remove any redundant variables (where only one value remains in that variable).
+
+This subset of the data is what you should use for the rest of this assessment. You must only analyse the specified data. No other data should be considered for this assessment.
+
+
+
+```{r libraries, include=FALSE}
+# load required libraries / additional files
+if(!require(tidyverse)){install.packages("tidyverse")}
+if(!require(summarytools)){install.packages("summarytools")}
+if(!require(performance)){install.packages("performance")}
+if(!require(patchwork)){install.packages("patchwork")}
+if(!require(see)){install.packages("see")}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(performance)
+library(psych)
+library(patchwork)
+library(see)
+```
+
+```{r data}
+# load dataset here
+Japandf <- read_csv("JapanEScooterData.csv",locale=locale(encoding="latin1"))
+Japandf$Date<- as.Date(Japandf$Date, format = '%d/%m/%Y')
+tibble(Japandf)  # tibble helps show the dataframe in the console. 
+
+```
+
+# Data Preparation 
+
+
+
+```{r dataprep}
+Japandf1<- subset(Japandf, `Solar Radiation (MJ/m2)`>0 & Season == "Summer") 
+
+Japandf2= subset(Japandf1, select = -c(Season,`Scheme Functioning`,`Snowfall(cm)`, `Solar Radiation (MJ/m2)`))
+
+#setting seed
+
+set.seed(21066027)
+sample_data <- sample_n(Japandf2, 500)
+
+print(tbl_df(sample_data), n=40) # viewing the first 40 records of the sample size
+
+```
+
+# Exploratory Data Analysis
+
+## Descriptive Statistics
+
+
+
+### Answer: 
+The descriptive statistics that would be appropriate for this dataset are, maximum of scooters rented per day, the average number of scooters hired each day, the mean distance from the center for each of the rentals, average rainfall, wind speed, visibility and temperature during summer.
+These statistics help us to get an idea about the distribution of these variables and compare them to the weather and visibility in Bristol to check if the information can be transferred to bristol in any amount.
+
+
+b. Produce those descriptive statistics in the code chunk below:
+
+
+```{r DescriptiveStats}
+print(describe(sample_data))
+```
+
+c. Interpretation of the descriptive statistics in context
+
+
+
+### Answer:
+1. The mean number of scooters hired per hour in Japan in summer is 1153.21 while the maximum number of scooters hired per hour is 3384.The standard deviation is 605.56 suggesting a lager spread of the data. The Skew is 1.18 which means it is positively skewed.
+2. The mean temperature in Japan is 30 degree celsius and it ranges from 0-39.60. ignoring the extreme negative temperature, this closely coincieds with temperatre profile of Bristol in the summer. Similar characterirstics is shown by the wind.
+
+
+## Exploratory Graphs
+
+### Answer:
+The appropriate graphs for this dataset is line graphs to assess the trends and patterns from beginning of summer to the end of summer. In addition, scatter plots are also important to observe the correlation of dependant variable and the explanatory variables.
+
+
+```{r ExploratoryGraphs}
+
+# Line Plots
+
+Ch1 <- sample_data %>%
+  ggplot(aes(x=Date, y=`Wind speed (m/s)`)) +
+  geom_line()+
+  geom_point()
+Ch2 <- sample_data %>%
+  ggplot(aes(x=Date, y=`Rented eScooter Count`)) +
+  geom_line()+
+  geom_point()
+Ch3<- sample_data %>%
+  ggplot(aes(x=Date, y=`Temperature(°C)`)) +
+  geom_line()+
+  geom_point() 
+Ch4<- sample_data %>%
+  ggplot(aes(x=Date, y=`Rainfall(mm)`)) +
+  geom_line()+
+  geom_point()
+Ch5<- sample_data %>%
+  ggplot(aes(x=Date, y=`Visibility(10m)`)) +
+  geom_line()+
+  geom_point()
+
+
+## Joining all plots in one output
+
+Ch1+Ch2+Ch3+Ch4+Ch5
+
+# Scatter Plots
+
+sp1 <- sample_data%>%
+  ggplot(aes(x=`Distance from centre(km)`, y=`Rented eScooter Count`))+geom_point()
+sp2 <- sample_data%>%
+  ggplot(aes(x=`Temperature(°C)`, y=`Rented eScooter Count`))+geom_point()
+sp3 <- sample_data%>%
+  ggplot(aes(x=`Wind speed (m/s)`, y=`Rented eScooter Count`))+geom_point()
+sp4 <- sample_data%>%
+  ggplot(aes(x=`Visibility(10m)`, y=`Rented eScooter Count`))+geom_point()
+sp5 <- sample_data%>%
+  ggplot(aes(x=`Rainfall(mm)`, y=`Rented eScooter Count`))+geom_point()
+
+
+sp1+sp2+sp3+sp4+sp5
+
+```
+
+f. Interpretation of these exploratory graphs in context
+
+
+### Answer:
+1. The first observation is that the wind speed has a repetitive pattern with regular highs and lows. The highest temperature is during August and the rentals have decreased during that time.
+2. June and July had the highest amount of hires.
+3. Visibility also follows reptitive pattern, when the visibility was the lowest, the rentals were the lowest too.
+4.There were ocasional heavy rainfall which lead to low rentals.
+5. while distance from center did not have any relation ship with number of rentals, distances around 5-6 km had peak hiring.
+6. Temperature, wind speed and visibility have positive correlation with hiring of vehicles. 
+7. People tend to hire more when there is no rainfall. Even the slightest increase in rainfall lowered the rentals drastically.
+
+## Correlations
+
+
+```{r linearcor}
+cor_sample_data <- subset(sample_data, select= c(`Rented eScooter Count`,`Distance from centre(km)`,
+`Temperature(°C)`,`Wind speed (m/s)`,`Visibility(10m)`,`Rainfall(mm)`))
+print(cor(cor_sample_data))
+
+
+```
+
+h.	Interpretation of the most relevant linear correlations within this data.
+
+### Answer:
+The highest correlation of rental count is with  Rainfall folowed closely by wind speed. Rainfall has weak negative correlation with rentals (-0.237). Wind Speed has weak positive correlation with number of rentals (0.235)
+
+
+# Bivariate relationship
+
+a. Creating a linear model to model the relationship between the dependent variable and **one** appropriate explanatory variable in the code chunk below.
+
+
+
+```{r model1}
+
+model1 <- lm(`Rented eScooter Count`~`Rainfall(mm)`, data= sample_data)
+summary(model1)
+
+```
+
+b.	Stating the fitted model and use this to explain the model. Interpret the r-squared value
+
+#Answer
+The fitted model is 
+$$number of rentals = 1181.844-175.91*Rainfall (mm)$$
+This model can be used to appromimate the hires when given the rainfall data.
+If we take rainfall value to be 0.5mm we can approximate the rentals to be
+1181.84-175.91*0.5= 1093.9, if we compare to the sample, this figure is not accurate.
+The R-squared for this model is 0.05 which is very low. which means that this model does not incorporate around 95% of other factors that might affect the number of rentals in an hour.
+
+
+c.	Comment on the performance of this model, including comments on overall model fit and the validity of model assumptions. Include any additional code required for you to make these comments in the code chunk below.
+
+
+
+### Answer:
+As we ca see from the result from the model performacne graphs, while this model follows linearity and homogeneity of variance criteria/ assumption for linear models, it does not satisfy the normality. It also has significant influencial observtations/ outliers that affect the performance of the model. 
+```{r model1performance}
+
+check_model(model1)
+
+```
+
+d. Using bootstrapping on this model to obtain a 95% confidence interval of the estimate of the slope parameter.
+
+
+
+```{r bootstrap}
+
+N<- 100
+len= length(sample_data$`Rented eScooter Count`)
+slope_model<-rep(NA,N)
+
+for(i in seq_len(N)){
+  index<-sample(seq_along(sample_data$`Rented eScooter Count`),size=len,replace=TRUE)   
+  
+  bootstrap.sample<-sample_data[index,]
+  
+  model<-lm(`Rented eScooter Count`~`Wind speed (m/s)`, data= bootstrap.sample)
+  slope_model[i]<- model$coefficients[2]
+}
+quantile(slope_model,c(0.05,0.5,0.95))
+```
+
+```
+
+
+
+Multivariable relationship 
+
+a. Creating a model with all potential explanatory variables included. Explain and interpret the model, considering limitations of this model. Include any code required in the code chunk below:
+
+
+### Answer:
+The model with all the potential variables is:
+$$rented escooter count = 1340.08+177.69*wind speed- 17.48* Distance from center *- 23.08 * Temperature
+ 0.18* Visibility-147.59* Rainfall.$$
+The r squared for this model is still very low which signifies that there are other variables that better describe the rentals of e-scooters. These variables are not available in the data set.
+
+While checking the model performance, we can observe that the dataset does not confirm to linearity assumptions for linear regression. We can see from the chart that there are some outliers which deviate the reference line from being flat and horizontal.
+There is no colinearity between the other variables.
+This dataset also does not follow normal distribution.
+The outliers are affecting the model and should have been adjusted for.
+
+```{r model2}
+model2 <- lm(`Rented eScooter Count`~`Rainfall(mm)`+`Wind speed (m/s)`+sample_data$`Distance from centre(km)`+sample_data$`Temperature(°C)`+sample_data$`Visibility(10m)`, data= sample_data)
+summary(model2)
+check_model(model2)
+```
+
+
+
+
+
+b. Simplify the model created in part (a). Justify your approach and decision-making process for simplifying the model. Explain and interpret the simplified model. Comment on the performance of this simplified model, including comments on overall model fit and the validity of model assumptions. Include any code required in the code chunk below:
+
+
+
+### Answer:
+Simplification of a model means to remove any unnecessary explanatory variables so that we save computation time while not compromising the quality of the approximation. Model simplification is necessary in this case as the stake holders are bristol council which do not need complex and accurate calculations, they are only interested in the trends and the patterns.
+The steps I would take to simplify and optimise the model from the above information and the exploratory graphs are:
+1. Remove distance from center, the exploratory graphs show that they have no affect in hiring.
+2. Adjust and account for the outliers, removing them by filtering out values less than 1.5 times the interquartile range and more than 1.5 times the interquartile range.
+3. Temperature seem to have non-linear relation with hires. So, removing this from the linear model makes sense for simplification.
+
+The simplified model can be expressed as :
+$$Rented scooter count = 697.05-138.9*Rainfall+140.63* Wind Speed+0.14*visibility$$
+This model is simpler, however not as accurate. However, this model aligns more accurately with linearity of the data, and the homogeneity of Variance.
+```{r model3performance}
+model3 <- lm(`Rented eScooter Count`~`Rainfall(mm)`+`Wind speed (m/s)`+`Visibility(10m)`, data= sample_data)
+summary(model3)
+
+check_model(model3)
+
+```
+
+
+
+#  Report 
+
+Write a short report of 300-500 words for Bristol City Council outlining your findings, referring to your analyses where appropriate. 
+
+Suggested to include in the report:
+
+- illustrate what they could learn about patterns in when e-Scooters are hired, supported by an appropriate model.
+
+- give any data collection recommendations you have so that they can optimise analyses for their situation.
+
+- comment on any suggestions for alterations to the statistical model that would be appropriate to consider.
+
+- highlight what may or may not be directly transferable from the scenario analysed.
+ 
+
+
+### Answer:
+Introducing e-scooters are a good step towards managing public transport, making it accessible for every one and reducing the carbon footprint of daily commuters. It is also attractive to customers as they don't have to worry about the parking for their private vehicles.
+This data from Japan shows promise in the growth of rental e-scooters. As much as 3350 e-scooters were hired during the peak hour in summer.
+E-scooters were hired when the temperature was not scorching hot, the wind was mild and the rainfall minimum. Summers in Bristol tend to follow this pattern ignoring occasional heat waves. The factors that affect the most in term of rentals was the rainfall, the temperature, the visibility and the wind.
+While rainfall, temperature and the wind is natural phenomenon and not under the control of the city council, visibility is something they can work on. Projects to improve the visibility not only in the summer but also in the winter will assist the growth of e-scooter rentals.
+As the r-squared values show, this dataset is not enough to account for predicting the rentals most accurately. More data can be collected that can be more explanatory towards number of rentals. Some of these data might be promotional events, the number of public transport and the fares, population of students and young professionals, average cost of maintaing a private vehicle in the city, parking costs, etc.
+Machine learning models can be used to optimise the models for better prediction. for exapmple, we can see that temperature and rainfall has effect on the number of hires but it is not linear. hence a linear model cannot accurately account for that behaviour. In contrast, machine learning models can be trained and tuned for more precise approximations.
+The behavior of customers hiring less rentals during high temperature and high rainfall can be directly transferred to Bristol and the UK as a whole. Japan and the UK being islands and in similar latitude the trends of hiring in june when the temperaturee is lower and in september during the onset of autumn can be taken as inspiration to promote e-scooters during the spring and the autumn, rather than the summer.
+
+
+
+
+
+
+# End matter - Session Information
+
+Do not edit this part. Make sure that you compile your document so that the information about your session (including software / package versions) is included in your submission.
+
+```{r}
+sessionInfo()
+```
